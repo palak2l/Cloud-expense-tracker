@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Cloud Expense Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">PL</div>
+        <div>
+          <h1>Cloud Expense Tracker — Made by Palak Lodha</h1>
+          <p id="hello">Loading your workspace…</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="theme-toggle" id="themeBtn" type="button">Dark mode</button>
+        <button class="ghost" id="logoutBtn" type="button">Log out</button>
+      </div>
+    </header>
+
+    <nav class="nav-pills" aria-label="Sections">
+      <button type="button" data-section="overview" class="active">Overview</button>
+      <button type="button" data-section="transactions">Transactions</button>
+      <button type="button" data-section="budgets">Budgets</button>
+      <button type="button" data-section="history">History & export</button>
+    </nav>
+
+    <div id="warnings" class="warnings hidden"></div>
+
+    <section id="overview" class="section visible">
+      <div class="cards">
+        <article class="stat income"><span>Total income</span><strong id="sumIncome">₹0.00</strong></article>
+        <article class="stat expense"><span>Total expenses</span><strong id="sumExpense">₹0.00</strong></article>
+        <article class="stat balance"><span>Balance</span><strong id="sumBalance">₹0.00</strong></article>
+        <article class="stat savings"><span>This month’s savings</span><strong id="sumSavings">₹0.00</strong></article>
+      </div>
+      <div class="grid-2">
+        <article class="panel">
+          <div class="kicker">Spending mix</div>
+          <h2>Category chart</h2>
+          <canvas id="categoryChart" height="220"></canvas>
+          <p class="empty hidden" id="catEmpty">No expenses yet. Add a transaction to see this chart.</p>
+        </article>
+        <article class="panel">
+          <div class="kicker">Cash flow</div>
+          <h2>Monthly trend</h2>
+          <canvas id="trendChart" height="220"></canvas>
+          <p class="empty hidden" id="trendEmpty">Charts appear after your first saved transaction.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="transactions" class="section">
+      <article class="panel">
+        <div class="toolbar">
+          <button class="primary" id="addBtn" type="button">Add transaction</button>
+          <input id="searchBox" type="search" placeholder="Search description or category" style="max-width:280px">
+        </div>
+        <div class="filters">
+          <input id="filterFrom" type="date">
+          <input id="filterTo" type="date">
+          <select id="filterType">
+            <option value="">All types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="filterCategory">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div id="txEmpty" class="empty hidden">No transactions match these filters yet.</div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Receipt</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section id="budgets" class="section">
+      <article class="panel">
+        <div class="kicker">Monthly limits</div>
+        <h2>Category budgets</h2>
+        <label for="budgetMonth">Month</label>
+        <input id="budgetMonth" type="month" style="max-width:220px">
+        <div id="budgetList" class="budget-list"></div>
+      </article>
+    </section>
+
+    <section id="history" class="section">
+      <article class="panel">
+        <div class="kicker">Records</div>
+        <h2>Transaction history</h2>
+        <div class="filters">
+          <input id="histFrom" type="date">
+          <input id="histTo" type="date">
+          <button class="primary" id="exportBtn" type="button">Export CSV</button>
+        </div>
+        <div id="histEmpty" class="empty hidden">Nothing to export for this date range.</div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th></tr>
+            </thead>
+            <tbody id="histBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <div class="modal" id="txModal">
+    <form class="panel" id="txForm">
+      <div class="kicker">Ledger</div>
+      <h2 id="txTitle">Add transaction</h2>
+      <input type="hidden" id="txId">
+      <div class="row-2">
+        <div>
+          <label for="txType">Type</label>
+          <select id="txType" required>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
+        <div>
+          <label for="txCategory">Category</label>
+          <select id="txCategory" required></select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div>
+          <label for="txAmount">Amount (₹)</label>
+          <input id="txAmount" type="number" min="0.01" step="0.01" required>
+        </div>
+        <div>
+          <label for="txDate">Date</label>
+          <input id="txDate" type="date" required>
+        </div>
+      </div>
+      <label for="txDesc">Description</label>
+      <input id="txDesc" type="text" maxlength="200" placeholder="Optional note">
+      <label for="txReceipt">Receipt (JPG, PNG, WEBP, or PDF, max 5 MB)</label>
+      <input id="txReceipt" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf">
+      <div class="notice" id="txNotice"></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="primary" type="submit">Save <span class="loader" id="txLoader"></span></button>
+        <button class="ghost" type="button" id="cancelTx">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast-wrap"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
